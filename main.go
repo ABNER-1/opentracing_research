@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/opentracing/opentracing-go"
-	"testOpentracing/pkg"
 	"math/rand"
 	"net"
 	"os"
 	"strconv"
 	"strings"
+	"testOpentracing/pkg/tracing"
 	"time"
 )
 
@@ -110,9 +110,9 @@ func handleRequest(conn net.Conn, port int) {
 	}else {
 		operationName += "c"
 	}
-	span := pkg.StarAChildSpanFromID(parentRequestID, operationName)
+	span := tracing.StartChildFromCarrier(operationName, parentRequestID)
 	defer span.Finish()
-	requestID := pkg.GetSpanID(span)
+	requestID := tracing.GetCarrier(span)
 	output := 0
 	if port == cPort {
 		span.SetTag("server", "c")
@@ -168,7 +168,6 @@ func startSocket(port int) {
 	}
 }
 
-
 func main() {
 	rand.Seed(int64(time.Now().UnixNano()))
 	serviceName := "service "
@@ -180,7 +179,8 @@ func main() {
 	case "a":
 		serviceName += "a: invoke service b"
 	}
-	closer, err := pkg.InitTracer(serviceName)
+	closer, err := tracing.InitTracer(serviceName, "localhost:5776", true)
+	//closer, err := tracing.InitTracerFromYAML("./tracer.yaml")
 	if err != nil {
 		fmt.Println("error", err)
 	}
@@ -199,15 +199,14 @@ func main() {
 		if err != nil {
 			fmt.Println("error", err)
 		}
-
 		HandleAddService(output, input)
 	}
 }
 
 func HandleAddService(output chan string, input int)  {
-	span := pkg.StarASpan(fmt.Sprintf("HandleAddService input=%d", input))
+	span := tracing.StartSpan(fmt.Sprintf("HandleAddService input=%d", input))
 	defer span.Finish()
-	requestID := pkg.GetSpanID(span)
+	requestID :=tracing.GetCarrier(span)
 
 	DoHandleStep1(span)
 
@@ -225,5 +224,4 @@ func DoHandleStep1(span opentracing.Span)  {
 	tracer := opentracing.GlobalTracer()
 	childSpan := tracer.StartSpan("Do handle Step 1", opentracing.ChildOf(span.Context()))
 	defer childSpan.Finish()
-
 }

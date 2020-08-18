@@ -1,0 +1,12 @@
+serviceName: test_yaml
+sampler:
+  type: const
+  param: 1
+reporter:
+  logSpans: true
+  localAgentHostPort: localhost:5776
+headers:
+  jaegerDebugHeader: ""
+  jaegerBaggageHeader: ""
+  TraceConextHeaderName: ""
+  traceBaggageHeaderPrefix: ""
