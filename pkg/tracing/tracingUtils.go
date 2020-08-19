@@ -9,7 +9,7 @@ import (
 	metrics "github.com/uber/jaeger-lib/metrics"
 	"gopkg.in/yaml.v2"
 	"io"
-	"testOpentracing/pkg"
+	"github/ABNER-1/testOpentracing/pkg"
 )
 
 const defaultTraceContextHeaderName = "trace_header"

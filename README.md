@@ -93,3 +93,13 @@ go run main.go a 10
     followerSpan := tracing.CreateFollowerFromCarrier(operationName, carrier)
     defer followerSpan.Finish()
     ```
+
+### log something or set some tags
+1. log something
+    ```go
+    span.LogKV("output", result)
+    ```
+2. set tags
+    ```go
+    span.SetTag("server", "c")
+    ```

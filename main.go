@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"testOpentracing/pkg/tracing"
+	"github/ABNER-1/testOpentracing/pkg/tracing"
 	"time"
 )
 
