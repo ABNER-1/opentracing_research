@@ -76,39 +76,39 @@ func InitTracerFromYAML(yamlPath string) (io.Closer, error) {
 	return closer, err
 }
 
-func StartSpan(operationName string) opentracing.Span {
+func CreateSpan(operationName string) opentracing.Span {
 	tracer := opentracing.GlobalTracer()
 	span := tracer.StartSpan(operationName)
 	return span
 }
 
-func StartChildFromSC(operationName string, sc opentracing.SpanContext) opentracing.Span {
+func CreateChildFromSC(operationName string, sc opentracing.SpanContext) opentracing.Span {
 	tracer := opentracing.GlobalTracer()
 	span := tracer.StartSpan(operationName, opentracing.ChildOf(sc))
 	return span
 }
 
-func StartFollowerFromSC(operationName string, sc opentracing.SpanContext) opentracing.Span {
+func CreateFollowerFromSC(operationName string, sc opentracing.SpanContext) opentracing.Span {
 	tracer := opentracing.GlobalTracer()
 	span := tracer.StartSpan(operationName, opentracing.FollowsFrom(sc))
 	return span
 }
 
-func StartChildFromCarrier(operationName string, carrier string) opentracing.Span {
+func CreateChildFromCarrier(operationName string, carrier string) opentracing.Span {
 	parentSC := extractSCFromCarrier(carrier)
-	return StartChildFromSC(operationName, parentSC)
+	return CreateChildFromSC(operationName, parentSC)
 }
 
-func StartFollowerFromCarrier(operationName string, carrier string) opentracing.Span {
+func CreateFollowerFromCarrier(operationName string, carrier string) opentracing.Span {
 	parentSC := extractSCFromCarrier(carrier)
-	return StartFollowerFromSC(operationName, parentSC)
+	return CreateFollowerFromSC(operationName, parentSC)
 }
 
 /* get carrier for IPC span relationship construction
 	for example:
 	1. get carrier of span
 	2. transfer carrier to the next process by sockets / http / grpc and so on
-    3. in next process, invoke StartChildFromCarrier to construct a child span of this
+    3. in next process, invoke CreateChildFromCarrier to construct a child span of this
 */
 func GetCarrier(span opentracing.Span) string {
 	tracer := opentracing.GlobalTracer()

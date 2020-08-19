@@ -4,7 +4,7 @@ sampler:
   param: 1
 reporter:
   logSpans: true
-  localAgentHostPort: localhost:5776
+  localAgentHostPort: localhost:5775
 headers:
   jaegerDebugHeader: ""
   jaegerBaggageHeader: ""

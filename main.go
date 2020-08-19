@@ -110,7 +110,7 @@ func handleRequest(conn net.Conn, port int) {
 	}else {
 		operationName += "c"
 	}
-	span := tracing.StartChildFromCarrier(operationName, parentRequestID)
+	span := tracing.CreateChildFromCarrier(operationName, parentRequestID)
 	defer span.Finish()
 	requestID := tracing.GetCarrier(span)
 	output := 0
@@ -204,7 +204,7 @@ func main() {
 }
 
 func HandleAddService(output chan string, input int)  {
-	span := tracing.StartSpan(fmt.Sprintf("HandleAddService input=%d", input))
+	span := tracing.CreateSpan(fmt.Sprintf("HandleAddService input=%d", input))
 	defer span.Finish()
 	requestID :=tracing.GetCarrier(span)
 
