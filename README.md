@@ -103,7 +103,6 @@ go run main.go a 10
     ```go
     span.SetTag("server", "c")
     ```
-   
 
 ## how to deploy in distributed system
 
@@ -114,16 +113,41 @@ We deployed services and jaeger agent in A, B, C machine, and deployed jaeger co
 ![arch](https://live.staticflickr.com/65535/50244154736_01ac06c9ab_o.png)
 
 ### deploy without k8s version
-These version use es storage for storing log and data.
-1.start agent in each machine
+
+These version use es storage for storing log and data. (Distributed jaeger version supports ES or Cassandra for storage.)
+
+1. start an es instance in a machine or start an es cluster for more stable storage if need
+
 ```bash
-docker run -d -p 5775:5775/udp jaegertracing/jaeger-agent:latest --reporter.grpc.host-port=192.168.1.223:14250
-
-docker run -d -e SPAN_STORAGE_TYPE=elasticsearch -e ES_SERVER_URLS=http://192.168.1.223:9200 -p 14250:14250/tcp jaegertracing/jaeger-collector:latest --es.index-prefix=openstracing
-
-docker run -d -p 16686:16686 -e SPAN_STORAGE_TYPE=elasticsearch -e ES_SERVER_URLS=http://192.168.1.223:9200 jaegertracing/jaeger-query:latest --es.index-prefix=openstracing
-
 docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.9.0
 ```
-### deploy with k8s
+
+2. start agent in each machine
+
+```bash
+docker run -d -p 5775:5775/udp jaegertracing/jaeger-agent:latest --reporter.grpc.host-port=${COLLOCTOR-HOST-IP}:14250
+```
+
+3. start collector in a machine
+
+```bash
+docker run -d -e SPAN_STORAGE_TYPE=elasticsearch -e ES_SERVER_URLS=http://${ES-HOST-IP}:9200 -p 14250:14250/tcp jaegertracing/jaeger-collector:latest --es.index-prefix=openstracing
+```
+
+4. start query in a machine for showing tracing result
+
+```bash
+docker run -d -p 16686:16686 -e SPAN_STORAGE_TYPE=elasticsearch -e ES_SERVER_URLS=http://${ES-HOST-IP}:9200 jaegertracing/jaeger-query:latest --es.index-prefix=openstracing
+```
+
+### deploy with k8s (untried)
+
+1. deploy jaeger operator in k8s environment.
+
+2. prepare external storage such as stable ES cluster.
+
+3. deploy production component (agent / collector / ingester / query)
+
+4. prepare MQ such as Kafka in k8s if need (need ingester)
+
 
