@@ -103,3 +103,9 @@ go run main.go a 10
     ```go
     span.SetTag("server", "c")
     ```
+   
+
+## how to deploy in distributed system
+### deploy without k8s version
+
+### deploy with k8s
