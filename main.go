@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/opentracing/opentracing-go"
+	"github/ABNER-1/testOpentracing/pkg/tracing"
 	"math/rand"
 	"net"
 	"os"
 	"strconv"
 	"strings"
-	"github/ABNER-1/testOpentracing/pkg/tracing"
 	"time"
 )
 
@@ -179,7 +179,7 @@ func main() {
 	case "a":
 		serviceName += "a: invoke service b"
 	}
-	closer, err := tracing.InitTracer(serviceName, "localhost:5776", true)
+	closer, err := tracing.InitTracer(serviceName, "localhost:5775", true)
 	//closer, err := tracing.InitTracerFromYAML("./tracer.yaml")
 	if err != nil {
 		fmt.Println("error", err)

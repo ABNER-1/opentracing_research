@@ -106,6 +106,24 @@ go run main.go a 10
    
 
 ## how to deploy in distributed system
-### deploy without k8s version
 
+There were 4 machines in the disturbed environment, called A, B, C, D.
+
+We deployed services and jaeger agent in A, B, C machine, and deployed jaeger collector and queries in D machine for tracing debug.
+
+![arch](https://live.staticflickr.com/65535/50244154736_01ac06c9ab_o.png)
+
+### deploy without k8s version
+These version use es storage for storing log and data.
+1.start agent in each machine
+```bash
+docker run -d -p 5775:5775/udp jaegertracing/jaeger-agent:latest --reporter.grpc.host-port=192.168.1.223:14250
+
+docker run -d -e SPAN_STORAGE_TYPE=elasticsearch -e ES_SERVER_URLS=http://192.168.1.223:9200 -p 14250:14250/tcp jaegertracing/jaeger-collector:latest --es.index-prefix=openstracing
+
+docker run -d -p 16686:16686 -e SPAN_STORAGE_TYPE=elasticsearch -e ES_SERVER_URLS=http://192.168.1.223:9200 jaegertracing/jaeger-query:latest --es.index-prefix=openstracing
+
+docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.9.0
+```
 ### deploy with k8s
+
