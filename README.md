@@ -15,15 +15,18 @@ docker run -d --name jaeger \
 ```
 
 2. run server b
+
 ```bash
 go run main.go b
 ```
 start another bash to run server c
+
 ```bash
 go run main.go c
 ```
 
 3. run client a
+
 ```bash
 go run main.go a 10
 ```
@@ -31,7 +34,9 @@ go run main.go a 10
 4. open jaeger url to watch result `localhost:16686`
 
 ## how to use
+
 ### in the same process
+
 1. init tracer from config
     ```go
     import (
@@ -72,7 +77,9 @@ go run main.go a 10
     ```
 
 ### tracing in IPC
+
 1. init tracer in each process
+
 2. create a span in first process and propagate carrier to the next process
     ```go
     operationName := "func 1"
@@ -81,12 +88,14 @@ go run main.go a 10
     carrier := GetCarrier(span)
     // propagate carrier to the next process
     ```
+
 3. create a child span in the next process
     ```go
     operationName := "func 2"
     childSpan := tracing.CreateChildFromCarrier(operationName, carrier)
     defer childSpan.Finish()
     ```
+
 4. or create a follower span in the next process
     ```go
     operationName := "func 3"
@@ -95,6 +104,7 @@ go run main.go a 10
     ```
 
 ### log something or set some tags
+
 1. log something
     ```go
     span.LogKV("output", result)
@@ -140,14 +150,105 @@ docker run -d -e SPAN_STORAGE_TYPE=elasticsearch -e ES_SERVER_URLS=http://${ES-H
 docker run -d -p 16686:16686 -e SPAN_STORAGE_TYPE=elasticsearch -e ES_SERVER_URLS=http://${ES-HOST-IP}:9200 jaegertracing/jaeger-query:latest --es.index-prefix=openstracing
 ```
 
-### deploy with k8s (untried)
+### deploy with k8s
 
 1. deploy jaeger operator in k8s environment.
 
+```bash
+kubectl create namespace observability # <1>
+kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/crds/jaegertracing.io_jaegers_crd.yaml # <2>
+kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/service_account.yaml
+kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/role.yaml
+kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/role_binding.yaml
+kubectl create -n observability -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/operator.yaml
+
+kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/cluster_role.yaml
+kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/cluster_role_binding.yaml
+```
+
 2. prepare external storage such as stable ES cluster.
+Use Es operator or deploy by docker image.
 
-3. deploy production component (agent / collector / ingester / query)
+3. deploy production component (collector / ingester / query)
 
-4. prepare MQ such as Kafka in k8s if need (need ingester)
+```yaml
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: simple-prod
+spec:
+  strategy: production
+  collector:
+    image: jaegertracing/jaeger-collector:latest # <1>
+  query:
+    image: jaegertracing/jaeger-query:latest # <1>
+  agent: # delete these two line if you want to use sidecar mode
+    strategy: DaemonSet
+  storage:
+    type: elasticsearch
+    options:
+      es:
+        server-urls: http://${ES-HOST}:9200
+```
 
+4. [Optional] prepare MQ such as Kafka in k8s if need (need ingester) *[not tried]*
+This is suitable for streaming mode.
 
+5. set agent with application as sidecar or DaemonSet
+    1. add agent as sidecar container and use it
+
+    ```yaml
+     - name: jaeger-agent
+       image: jaegertracing/jaeger-agent:latest # it's best to keep this version in sync with the operator's
+       env:
+       - name: POD_NAMESPACE
+         valueFrom:
+           fieldRef:
+             fieldPath: metadata.namespace
+       args:
+       - --reporter.grpc.host-port=dns:///jaeger-collector-headless.$(POD_NAMESPACE).svc.cluster.local:14250
+       ports:
+       - containerPort: 5775
+         name: jg-compact-trft
+         protocol: UDP
+   ```
+
+   2. (1) deploy agent as DaemonSet
+
+   ```yaml
+   apiVersion: jaegertracing.io/v1
+   kind: Jaeger
+   metadata:
+     name: my-jaeger
+   spec:
+     agent: # add these two line to collector & query yaml
+       strategy: DaemonSet
+   ```
+   
+   2. (2) use agent in application k8s yaml
+
+   ```yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: myapp
+   spec:
+     selector:
+       matchLabels:
+         app: myapp
+     template:
+       metadata:
+         labels:
+           app: myapp
+       spec:
+         containers:
+         - name: myapp
+           image: acme/myapp:myversion
+           env:
+           - name: JAEGER_AGENT_HOST  # use env in the application config code or yaml config file
+             valueFrom:
+               fieldRef:
+                 fieldPath: status.hostIP
+   ```
+
+PS: 其实 agent 和 jaeger client 可以不在同一个 host 上，但因为协议使用 udp ， 有存在丢失的可能性。 所有最佳实践上都要求部署在同一个 host 上。如果是局域网，其实还是可以容忍的。 故开发环境下，是可以部署在不同的host上以供快速调试。
