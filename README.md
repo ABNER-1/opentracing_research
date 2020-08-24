@@ -124,7 +124,7 @@ There were 4 machines in the disturbed environment, called A, B, C, D.
 
 We deployed services and jaeger agent in A, B, C machine, and deployed jaeger collector and queries in D machine for tracing debug.
 
-![arch](https://live.staticflickr.com/65535/50244154736_01ac06c9ab_o.png)
+![arch](https://live.staticflickr.com/65535/50262240706_ea9eb984ef_o.png)
 
 ### deploy without k8s version
 
