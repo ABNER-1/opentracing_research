@@ -1,5 +1,8 @@
-[toc]
-## how to run
+- [how to run opentracing scoket demo](#how-to-run-opentracing-scoket-demo)
+- [how to use this package](#how-to-use-this-package)
+- [how to deploy jaeger in distributed system](#how-to-deploy-jaeger-in-distributed-system)
+
+## how to run opentracing scoket demo
 1. run jaeger docker all in on in localhost
 ```bash
 docker run -d --name jaeger \
@@ -34,7 +37,7 @@ go run main.go a 10
 
 4. open jaeger url to watch result `localhost:16686`
 
-## how to use
+## how to use this package
 
 ### in the same process
 
@@ -115,7 +118,7 @@ go run main.go a 10
     span.SetTag("server", "c")
     ```
 
-## how to deploy in distributed system
+## how to deploy jaeger in distributed system
 
 There were 4 machines in the disturbed environment, called A, B, C, D.
 
