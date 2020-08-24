@@ -1,3 +1,4 @@
+[toc]
 ## how to run
 1. run jaeger docker all in on in localhost
 ```bash
